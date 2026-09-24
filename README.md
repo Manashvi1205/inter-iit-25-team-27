@@ -1,8 +1,8 @@
 # Inter IIT Tech Meet — Team 27 Autonomous Warehouse Rover
 
-Submission archive for **Team 27**: ROS 2 navigation + QR shelf scanning + hardware + mission-control HMI.
+ROS 2 navigation, QR shelf scanning, hardware, and mission-control HMI.
 
-The GitHub repo is this inner folder (`02_CODE_REPOSITORY`, `03_HARDWARE`, `04_VISION`). Demo `.mov` files are stored with **Git LFS** because several are larger than GitHub’s 100 MB git-object limit.
+Demo `.mov` files are stored with **Git LFS** (several are over GitHub’s 100 MB git-object limit). Clone with `git lfs install` first.
 
 ---
 
@@ -10,17 +10,15 @@ The GitHub repo is this inner folder (`02_CODE_REPOSITORY`, `03_HARDWARE`, `04_V
 
 | Path | What it is |
 |------|------------|
-| [`01_TECHNICAL_DOCUMENTATION.pdf`](01_TECHNICAL_DOCUMENTATION.pdf) | Team technical write-up |
-| [`02_CODE_REPOSITORY/`](02_CODE_REPOSITORY) | **Canonical robot software**: ROS 2 workspace, Arduino firmware, Flask HMI |
-| [`03_HARDWARE/`](03_HARDWARE) | BOM, CAD (`Bot.step`), drawings, schematics, demo videos |
-| [`04_VISION/`](04_VISION) | Vision notes, alternate ROS vision workspace, HMI clones, CV experiments |
+| [`code/`](code) | Robot software: ROS 2 workspace, Arduino firmware, Flask HMI |
+| [`hardware/`](hardware) | BOM, CAD (`Bot.step`), drawings, schematics, demo videos |
+| [`vision/`](vision) | Vision notes, alternate ROS workspace, HMI clones, CV experiments |
+| [`docs/technical-documentation.pdf`](docs/technical-documentation.pdf) | Team technical write-up |
 
-`README_SUBMISSION.txt` is the original one-line submission tag (`TEAM 27`).
-
-### Canonical code (start here)
+### Robot software (`code/`)
 
 ```
-02_CODE_REPOSITORY/
+code/
   src/src/                 ROS 2 packages (double-src layout from the Jetson workspace)
     bot_description        URDF/xacro, Gazebo worlds, RViz
     bot_bringup            Bringup launch, Nav2 params, EKF, commander
@@ -31,30 +29,30 @@ The GitHub repo is this inner folder (`02_CODE_REPOSITORY`, `03_HARDWARE`, `04_V
   hmi/                     Flask “Eternal Rover Mission Control” dashboard
 ```
 
-### Hardware
+### Hardware (`hardware/`)
 
-- [`03_HARDWARE/BOM.csv`](03_HARDWARE/BOM.csv) — parts list (Jetson Orin Nano, RPLiDAR S2E, IMX258 camera, IG42/IG45 motors, LiFePO4 pack, …)
-- CAD: `03_HARDWARE/CAD_Models/CAD and Drawings/Bot.step` plus assembly PDFs
-- Schematics: `03_HARDWARE/Electrical_Schematics/`
-- Videos: `03_HARDWARE/Videos/` (`Vertical_scanning.mov`, `HMI.mov`, `obstacle_avoidance.mov`, `Slam.mov`, …)
+- [`hardware/BOM.csv`](hardware/BOM.csv) — parts list (Jetson Orin Nano, RPLiDAR S2E, IMX258 camera, IG42/IG45 motors, LiFePO4 pack, …)
+- CAD: `hardware/CAD_Models/CAD and Drawings/Bot.step` plus assembly PDFs
+- Schematics: `hardware/Electrical_Schematics/`
+- Videos: `hardware/Videos/` (`Vertical_scanning.mov`, `HMI.mov`, `obstacle_avoidance.mov`, `Slam.mov`, …)
 
-`HMI.mov` / `2.mov` and `obstacle_avoidance.mov` / `obs.mov` look like duplicate pairs (same file sizes). Both are kept.
+`HMI.mov` / `2.mov` and `obstacle_avoidance.mov` / `obs.mov` are duplicate pairs (same content). Both are kept.
 
 ### Vision copies (not the live stack)
 
-There are **four Flask HMI trees** and extra vision scripts. The live robot stack is `02_CODE_REPOSITORY`. Treat these as history / experiments:
+The live robot stack is **`code/`**. Treat `vision/` as history / experiments:
 
-- `02_CODE_REPOSITORY/hmi/` — **use this HMI**
-- `04_VISION/Inter IIT/`, `04_VISION/website/Inter IIT/`, `04_VISION/website/Inter-IIT/` — older clones of the same dashboard
-- `04_VISION/ros_workspace/` — TCP vision server + `warehouse_scanning` scripts
-- `04_VISION/website/code/` and `04_VISION/website/Finalizing_shits/` — scanner / YOLO / homography prototypes
-- [`04_VISION/d.md`](04_VISION/d.md) — long vision-architecture notes
+- `code/hmi/` — **use this HMI**
+- `vision/Inter IIT/`, `vision/website/Inter IIT/`, `vision/website/Inter-IIT/` — older clones of the same dashboard
+- `vision/ros_workspace/` — TCP vision server + `warehouse_scanning` scripts
+- `vision/website/code/` and `vision/website/Finalizing_shits/` — scanner / YOLO / homography prototypes
+- [`vision/d.md`](vision/d.md) — long vision-architecture notes
 
 ---
 
 ## Robot stack (ROS 2)
 
-Packages under `02_CODE_REPOSITORY/src/src/`. Expected compute: **NVIDIA Jetson Orin Nano**.
+Packages under `code/src/src/`. Expected compute: **NVIDIA Jetson Orin Nano**.
 
 Typical bringup (on the robot, after `colcon build` and sourcing `install/setup.bash`):
 
@@ -70,14 +68,14 @@ ros2 launch bot_description gazebo_test.launch.py
 
 LiDAR: RPLiDAR S2E via vendored `rplidar_ros`.
 
-Firmware to flash is in `02_CODE_REPOSITORY/Utils/` (`.ino` sketches for Mega / ESP / servo board).
+Firmware to flash is in `code/Utils/` (`.ino` sketches for Mega / ESP / servo board).
 
 ---
 
 ## Mission-control HMI
 
 ```pwsh
-cd 02_CODE_REPOSITORY/hmi
+cd code/hmi
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -86,7 +84,7 @@ python app.py
 
 Open `http://localhost:5000`. Demo login in the HMI README is `admin` / `password` — change it before exposing the dashboard on a network.
 
-Jetson posts telemetry/inventory to `POST /api/update`. See [`02_CODE_REPOSITORY/hmi/README.md`](02_CODE_REPOSITORY/hmi/README.md).
+Jetson posts telemetry/inventory to `POST /api/update`. See [`code/hmi/README.md`](code/hmi/README.md).
 
 ---
 
@@ -96,12 +94,12 @@ High level: camera + pan/tilt servos → YOLO / WeChat QR → shelf inventory CS
 
 WeChat QR `.caffemodel` weights live next to the prototxt under:
 
-- `02_CODE_REPOSITORY/src/src/bot_scanning/config/wechat_qrcode_models/`
-- `04_VISION/ros_workspace/src/warehouse_scanning/config/wechat_qrcode_models/`
+- `code/src/src/bot_scanning/config/wechat_qrcode_models/`
+- `vision/ros_workspace/src/warehouse_scanning/config/wechat_qrcode_models/`
 
-Standalone TCP server notes: [`04_VISION/ros_workspace/readme.txt`](04_VISION/ros_workspace/readme.txt).
+Standalone TCP server notes: [`vision/ros_workspace/readme.txt`](vision/ros_workspace/readme.txt).
 
-Python deps (vision side): [`04_VISION/ros_workspace/requirements.txt`](04_VISION/ros_workspace/requirements.txt).
+Python deps (vision side): [`vision/ros_workspace/requirements.txt`](vision/ros_workspace/requirements.txt).
 
 ---
 
@@ -109,17 +107,7 @@ Python deps (vision side): [`04_VISION/ros_workspace/requirements.txt`](04_VISIO
 
 ```bash
 git lfs install
-git clone <this-repo-url>
+git clone https://github.com/Manashvi1205/inter-iit-25-team-27.git
 ```
 
 Without Git LFS you will only get tiny pointer files instead of the `.mov` demos.
-
----
-
-## What was cleaned for GitHub
-
-This used to be a dump with **nested git clones** (including `sthitapragyan001/Inter-IIT` HMI copies). Nested `.git` folders were removed so everything lands in **one** repository instead of empty submodule links.
-
-Ignored: `__pycache__`, virtualenvs, colcon `build/install/log`, macOS `__MACOSX` junk, `*.log`, `.env` secrets.
-
-Kept: all source, CAD, PDFs, images, STL/STEP meshes, and demo videos.
