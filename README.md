@@ -96,5 +96,5 @@ Videos are stored with Git LFS.
 
 ```bash
 git lfs install
-git clone https://github.com/Manashvi1205/Autonomous-Rover-for-Warehouse-Rack-Inventory.git
+git clone https://github.com/Manashvi1205/warehouse-rover.git
 ```
