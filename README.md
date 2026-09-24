@@ -7,11 +7,19 @@ A differential-drive rover that drives warehouse aisles, reaches racks with a ta
 </div>
 
 <p align="center">
-  <img src="docs/assets/bot-hero.jpg" alt="Full rover beside warehouse racks" width="820"/>
+  <img src="docs/assets/rover-rack.jpg" alt="Rover at a warehouse rack with the scanning mast raised" width="520"/>
 </p>
 
 <p align="center">
-  <img src="docs/assets/bot-aisle.jpg" alt="Rover in the aisle with the scanning mast raised" width="820"/>
+  <img src="docs/assets/rover-chassis.jpg" alt="Chassis, batteries, camera, and emergency stop" width="860"/>
+</p>
+
+<p align="center">
+  <img src="docs/assets/rover-floor.jpg" alt="Rover on the warehouse floor with live LiDAR on the monitor" width="640"/>
+</p>
+
+<p align="center">
+  <img src="docs/assets/rviz-lidar.png" alt="RViz LiDAR scan" width="860"/>
 </p>
 
 Aluminum chassis, clear electronics deck, yellow drive wheels, and a vertical mast that carries the camera up the rack face. LiDAR sits on the deck for mapping and obstacle avoidance.
@@ -35,10 +43,6 @@ Aluminum chassis, clear electronics deck, yellow drive wheels, and a vertical ma
 | [Vertical scanning](hardware/Videos/Vertical_scanning.mov) | Mast and camera at shelf height |
 | [SLAM](hardware/Videos/Slam.mov) | Mapping run |
 | [Dashboard](hardware/Videos/HMI.mov) | Live rack status on the operator laptop |
-
-<p align="center">
-  <img src="docs/assets/dashboard.jpg" alt="Live rack inventory dashboard" width="820"/>
-</p>
 
 ---
 
