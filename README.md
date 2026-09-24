@@ -96,5 +96,5 @@ Videos are stored with Git LFS.
 
 ```bash
 git lfs install
-git clone https://github.com/Manashvi1205/inter-iit-25-team-27.git
+git clone https://github.com/Manashvi1205/inter-iit-25.git
 ```
