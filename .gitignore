@@ -23,6 +23,9 @@ log/
 __MACOSX/
 ._*
 
+# Scratch frames pulled from demo videos
+_frames/
+
 # Editors / OS
 Thumbs.db
 *.swp
