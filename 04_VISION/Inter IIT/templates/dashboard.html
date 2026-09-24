@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Eternal Rover // Warehouse OS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .warehouse-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 24px; align-items: start; overflow-y: auto; padding-right: 10px; will-change: max-height; }
+      .rack-column {
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 15px;
+        min-width: 0; /* allow grid to control width */
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        /* Ensure the column is tall enough to show 5 shelves without inner scrolling */
+        min-height: 380px; /* (shelf height 60 + gap 10) * 5 + padding */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 8px;
+      }
+    @media (max-width: 1100px) { .warehouse-container { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) { .warehouse-container { grid-template-columns: repeat(2, 1fr); gap: 14px; } .sidebar { width: 100%; height: auto; position: relative; box-shadow: none; } .main-content { margin-left: 0; padding: 18px; } }
+
+    :root { --sidebar-width: 300px; --bg-dark: #0a0a0a; --bg-panel: #141414; --accent: #00ff88; --accent-dim: rgba(0, 255, 136, 0.1); --text-main: #e0e0e0; --text-muted: #888; --danger: #ff4d4d; --danger-glow: rgba(255, 77, 77, 0.4); --unknown: #333; }
+    body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', monospace; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #0f0f0f; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    .sidebar { position: fixed; top:0; left:0; width: var(--sidebar-width); height:100vh; background:#0f0f0f; border-right:1px solid #222; padding:20px; overflow-y:auto; z-index:1000; }
+    .brand-title { color: var(--accent); font-size:1.6rem; font-weight:800; margin-bottom:2rem; letter-spacing:2px; text-transform:uppercase; text-shadow:0 0 10px var(--accent-dim); }
+    .stat-group { background:var(--bg-panel); padding:15px; border-radius:6px; margin-bottom:15px; border:1px solid #222; border-left:3px solid var(--accent); box-shadow:0 4px 6px rgba(0,0,0,0.3); }
+    .stat-label { color: var(--text-muted); font-size:.75rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
+    .stat-value { font-size:1.4rem; font-weight:600; color:#fff; }
+    .stat-sub { font-size:.8rem; color:#666; margin-top:5px; }
+
+    .empty-shelf-list { max-height:85px; overflow-y:auto; background:#000; border:1px solid #333; border-radius:4px; padding:5px; margin-bottom:10px; }
+    .empty-item { color:var(--danger); font-size:.85rem; padding:4px 8px; border-bottom:1px solid #1a1a1a; display:flex; align-items:center; }
+    .empty-item:last-child { border-bottom:none; } .empty-item::before { content:"•"; color:var(--danger); margin-right:8px; font-size:1.2rem; }
+
+    .main-content { margin-left: var(--sidebar-width); padding:30px; } .page-header h2 { color:#fff; font-weight:300; } .page-header strong { font-weight:800; color:var(--accent); }
+    @keyframes pulse-green { 0%{box-shadow:0 0 0 0 rgba(0,255,136,.7);}70%{box-shadow:0 0 0 10px rgba(0,255,136,0);}100%{box-shadow:0 0 0 0 rgba(0,255,136,0);} }
+    .live-badge { background-color:var(--accent); color:#000; font-weight:bold; padding:5px 12px; border-radius:20px; font-size:.8rem; display:inline-block; }
+    .flashing { animation:pulse-green 2s infinite; }
+
+    .rack-title { text-align:center; color:#555; font-weight:800; font-size:1.2rem; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px; letter-spacing:2px; }
+    .shelf-box { background:#1a1a1a; height:60px; margin-bottom:10px; border-radius:4px; display:flex; align-items:center; justify-content:space-between; padding:0 15px; border:1px solid #2a2a2a; transition:all .3s; position:relative; overflow:hidden; gap: 8px; }
+    .shelf-id { font-weight:bold; color:#fff; font-size:1.1rem; white-space:nowrap; flex-shrink:0; cursor:pointer; text-shadow: 0 0 4px rgba(0,0,0,0.8); } .shelf-status-text { font-size:.7rem; text-transform:uppercase; letter-spacing:1px; text-align:right; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .status-unknown { border:1px dashed #444; opacity:.6; }
+    .shelf-box.highlight-search { box-shadow: 0 0 10px rgba(0,255,136,0.6) inset !important; background: rgba(0,255,136,0.15) !important; }
+    @keyframes accent-pulse { 0%{border-left-color:var(--accent);box-shadow:0 0 0 0 rgba(0,255,136,0.4);}50%{border-left-color:#00ff88;box-shadow:0 0 0 6px rgba(0,255,136,0);}100%{border-left-color:var(--accent);box-shadow:0 0 0 0 rgba(0,255,136,0.4);} }
+    .status-full { border-left:4px solid var(--accent); background:linear-gradient(90deg,#1a1a1a 0%, rgba(0,255,136,0.05) 100%); animation:accent-pulse 2s infinite; } .status-full .shelf-id { color:#fff; } .status-full .shelf-status-text { color:var(--accent); }
+    @keyframes alert-pulse { 0%{box-shadow:0 0 5px var(--danger-glow) inset;border-color:var(--danger);}50%{box-shadow:0 0 15px var(--danger-glow) inset;border-color:#ff8888;}100%{box-shadow:0 0 5px var(--danger-glow) inset;border-color:var(--danger);} }
+    .status-empty { background: rgba(255,77,77,0.1); border:1px solid var(--danger); animation:alert-pulse 2s infinite; } .status-empty .shelf-id { color:#fff; } .status-empty .shelf-status-text { color:var(--danger); font-weight:bold; }
+
+    @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+
+    .table-wrapper { max-height:250px; overflow-y:auto; border:1px solid #222; border-radius:8px; background:#111; } .custom-table { background:#111; color:#ccc; width:100%; margin-bottom:0; border-collapse:separate; border-spacing:0; }
+    .custom-table th { background:#1f1f1f; color:#888; border-bottom:1px solid #333; font-weight:600; text-transform:uppercase; font-size:.75rem; position:sticky; top:0; z-index:10; padding:12px; } .custom-table td { border-bottom:1px solid #222; color:#ccc; font-size:.85rem; padding:10px 12px; background:#111; }
+    .custom-table tr:last-child td { border-bottom:none; } .custom-table tr:hover td { background:#1a1a1a; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="brand-title">Eternal Stats</div>
+    <div class="d-flex align-items-center mb-4">
+      <span id="conn-badge" class="live-badge flashing me-2">LIVE</span>
+      <small class="text-secondary" id="last-ping">Connecting...</small>
+    </div>
+    <div class="stat-group"><div class="stat-label">Bot Uptime</div><div class="stat-value" id="val-uptime">00:00:00</div><div class="stat-sub">Started: <span id="val-start">--</span></div></div>
+    <div class="stat-group"><div class="stat-label">Last Scan</div><div class="stat-value fs-5" id="val-last-scan">--</div><div class="stat-sub">Status: <span id="val-status" class="text-success">--</span></div></div>
+    <div class="mt-2 pt-2 border-top border-secondary"><h6 class="text-white mb-2">Search Inventory</h6><input type="text" class="form-control form-control-sm bg-dark text-white border-secondary mb-2" id="search-input" placeholder="Search by item code..." /><div id="search-results" class="small text-light p-2" style="max-height:120px; overflow-y:auto; background:#1a1a1a; border:1px solid #444; border-radius:4px; display:none;"></div></div>
+    <div class="mt-2 pt-2 border-top border-secondary"><h6 class="text-white mb-2">Mission Control</h6><select class="form-select form-select-sm bg-dark text-white border-secondary mb-2" id="round-select"><option value="">Loading...</option></select><button class="btn btn-outline-success btn-sm w-100" onclick="startNewRound()">+ Initialize New Round</button></div>
+    
+    <div class="mt-3 pt-2 border-top border-secondary"><h6 class="text-white mb-2">Vision Controls</h6>
+      <div class="row g-2 w-100">
+        <div class="col-6"><button class="btn btn-sm btn-outline-info w-100" onclick="visionCapture('normal')" title="Single angle capture" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:0.75rem;">📷 Normal</button></div>
+        <div class="col-6"><button class="btn btn-sm btn-outline-info w-100" onclick="visionCapture('top')" title="Top shelf scan" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:0.75rem;">📷 Top</button></div>
+        <div class="col-6"><button class="btn btn-sm btn-outline-info w-100" onclick="visionCapture('bottom')" title="Bottom shelf scan" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:0.75rem;">📷 Bottom</button></div>
+        <div class="col-6"><button class="btn btn-sm btn-outline-warning w-100" onclick="visionCapture('full_sweep')" title="Full sweep: bottom → normal → top" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:0.75rem;">📷 Sweep</button></div>
+      </div>
+      <hr class="my-2" style="border-color: #333;">
+      <div class="row g-2 w-100">
+        <div class="col-6"><button class="btn btn-sm btn-outline-success w-100" onclick="visionLED('green', 'med')" title="Green LED medium" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🟢 LED On</button></div>
+        <div class="col-6"><button class="btn btn-sm btn-outline-danger w-100" onclick="visionLED('off')" title="Turn off LED" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">⚫ LED Off</button></div>
+        <div class="col-6"><button class="btn btn-sm btn-outline-secondary w-100" onclick="visionServoDebug()" title="Open servo debug terminal" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🔧 Servo</button></div>
+        <div class="col-6"><button class="btn btn-sm btn-outline-secondary w-100" onclick="visionWaitCompletion()" title="Wait for processing" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">⏳ Wait</button></div>
+      </div>
+    </div>
+    
+    <div class="mt-2"><h6 class="text-white mb-2">Priority Alerts</h6><div class="empty-shelf-list" id="empty-list"><div class="text-muted small p-2">System Optimal. No alerts.</div></div></div>
+    
+    <div class="mt-2"><a href="/logout" class="btn btn-outline-danger btn-sm w-100">Terminate Session</a></div>
+  </div>
+
+  <div class="main-content">
+    <div class="d-flex justify-content-between align-items-end mb-5 page-header">
+      <div><h2 class="mb-0">Warehouse <strong>Management</strong></h2><p class="mb-0" style="color: grey; font-size: 1.1rem; font-weight: 500;">Real-time Inventory Visualization & Telemetry</p></div>
+      <div class="text-end d-flex gap-2 align-items-center"><div><h4 class="mb-0 text-white" id="current-round-display">Round #1</h4><span class="badge bg-dark border border-secondary text-secondary" id="coordinates-display">Pos: 0,0</span></div><a href="/logout" class="btn btn-sm btn-outline-danger ms-3">Logout</a></div>
+    </div>
+
+    <div class="mb-5">
+      <h5 class="text-white mb-3 border-bottom border-secondary pb-2 d-inline-block">Live Rack Status</h5>
+      <div class="warehouse-container" id="warehouse-container"><div class="text-muted p-3">Initializing Map Data...</div></div>
+    </div>
+
+    <div class="mb-4">
+      <h5 class="text-white mb-3">Event Logs</h5>
+      <div class="table-wrapper"><table class="table custom-table mb-0"><thead><tr><th>Timestamp</th><th>System Status</th><th>Task</th><th>Target ID</th><th>Result</th></tr></thead><tbody id="telemetry-body"></tbody></table></div>
+    </div>
+  </div>
+
+  <script>
+    let currentViewingRound = null;
+    let __updating = false;
+    let __lastWarehouseHTML = '';
+    let __lastLogsHTML = '';
+    let __warehouseScrollTop = 0;
+
+    function normalizeScannedIdFlexible(raw) {
+      if (!raw) return '';
+      let s = String(raw).trim();
+      s = s.replace(/^rack[\s:_-]*/i, '');
+      s = s.replace(/[\s]+/g, '');
+      s = s.toUpperCase();
+      const m = s.match(/^([A-Z]+)(\d{1,2})$/);
+      if (m) {
+        const letter = m[1];
+        let num = m[2];
+        if (num.length === 1) num = '0' + num;
+        s = `${letter}-${num}`;
+      }
+      return s;
+    }
+
+    async function updateDashboard() {
+      if (__updating) return;
+      __updating = true;
+      try {
+        const roundQuery = currentViewingRound ? `?round_id=${currentViewingRound}` : '';
+        const res = await fetch(`/api/get_data${roundQuery}`);
+        if (!res.ok) { __updating = false; return console.warn('get_data http', res.status); }
+        const data = await res.json();
+
+        const vitals = data.vitals || {};
+        const stats = data.stats || {};
+
+        // Store stats for search functionality
+        window.__lastStats = stats;
+
+        document.getElementById('val-status').innerText = vitals.status || '--';
+        document.getElementById('coordinates-display').innerText = `POS: ${vitals.coordinates || '0,0'}`;
+        document.getElementById('last-ping').innerText = 'Synced: ' + new Date().toLocaleTimeString();
+        document.getElementById('val-uptime').innerText = stats.uptime || '--';
+        document.getElementById('val-start').innerText = stats.start_time || '--';
+        document.getElementById('val-last-scan').innerText = stats.last_scan || '--';
+
+        const emptyList = document.getElementById('empty-list');
+        if (stats.empty_shelves && stats.empty_shelves.length > 0) {
+          const newEmpty = stats.empty_shelves.map(s => `<div class="empty-item">EMPTY DETECTED: ${s}</div>`).join('');
+          if (emptyList.innerHTML !== newEmpty) emptyList.innerHTML = newEmpty;
+        } else {
+          const defaultHtml = '<div class="text-muted small p-2">System Optimal. No alerts.</div>';
+          if (emptyList.innerHTML !== defaultHtml) emptyList.innerHTML = defaultHtml;
+        }
+
+        // ---------- SIMPLE + RELIABLE: apply latest scan events immediately ----------
+        const rawShelfMap = Object.assign({}, stats.scanned_shelves_map || {});
+        for (const k of Object.keys(rawShelfMap)) {
+          if (rawShelfMap[k] === undefined || rawShelfMap[k] === null) rawShelfMap[k] = 'Unknown';
+          else rawShelfMap[k] = String(rawShelfMap[k]);
+        }
+
+        function normalizeId(x) {
+          if (!x) return '';
+          let s = String(x).trim();
+          s = s.replace(/^rack[\s:_-]*/i, '');
+          s = s.replace(/\s+/g, '');
+          s = s.toUpperCase();
+          const m = s.match(/^([A-Z]+)(\d{1,2})$/);
+          if (m) {
+            let num = m[2];
+            if (num.length === 1) num = '0' + num;
+            s = `${m[1]}-${num}`;
+          }
+          return s;
+        }
+
+        // ---------- end immediate-scan block ----------
+
+        const container = document.getElementById('warehouse-container');
+        let newWarehouseHTML = '<!--generated-->';
+        if (Object.keys(rawShelfMap).length > 0) {
+          const racks = {};
+          Object.keys(rawShelfMap).sort().forEach(shelfId => {
+            const rackId = shelfId.split('-')[0];
+            if (!racks[rackId]) racks[rackId] = [];
+            racks[rackId].push({ id: shelfId, status: rawShelfMap[shelfId] });
+          });
+          let html = '';
+          for (const [rackId, shelves] of Object.entries(racks)) {
+            shelves.sort((a,b) => b.id.localeCompare(a.id));
+            html += `<div class="rack-column" data-rack="${rackId}"><div class="rack-title">RACK ${rackId}</div>`;
+            for (const shelf of shelves) {
+              const status = (typeof shelf.status === 'string') ? shelf.status : String(shelf.status || '');
+              const st = status.toLowerCase();
+              let statusClass = 'status-unknown';
+              if (st === 'empty') statusClass = 'status-empty';
+              else if (st !== 'unknown' && st !== '' && st !== 'n/a' && st !== 'none') statusClass = 'status-full';
+              else statusClass = 'status-unknown';
+              const shelfNumber = shelf.id.split('-')[1] || shelf.id;
+              const displayId = `S${shelfNumber}`;
+              html += `<div class="shelf-box ${statusClass}" data-shelf-id="${shelf.id}" onclick="highlightShelf('${shelf.id}')"><span class="shelf-id">${displayId}</span><span class="shelf-status-text"> ${status}</span></div>`;
+            }
+            html += `</div>`;
+          }
+          newWarehouseHTML = html;
+        }
+
+        if (container) __warehouseScrollTop = container.scrollTop || 0;
+        if (newWarehouseHTML !== __lastWarehouseHTML) {
+          container.innerHTML = newWarehouseHTML;
+          __lastWarehouseHTML = newWarehouseHTML;
+          requestAnimationFrame(() => {
+            container.scrollTop = Math.min(__warehouseScrollTop, container.scrollHeight);
+            adjustWarehouseVisibleRows();
+            adjustVisibleCounts();
+          });
+        } else {
+          adjustWarehouseVisibleRows();
+          adjustVisibleCounts();
+        }
+
+        const tbody = document.getElementById('telemetry-body');
+        const newLogsHTML = (data.logs || []).map(row => {
+          const ts = (row.timestamp || '').split(' ')[1] || '';
+          const status = row.status || '';
+          const task = row.current_task || '';
+          const tid = row.shelf_id || '-';
+          const resultClass = (row.shelf_status === 'Empty') ? 'text-danger fw-bold' : 'text-success';
+          const result = row.shelf_status || '-';
+          return `<tr><td><span style="color:#666">${ts}</span></td><td><span class="badge bg-dark border border-secondary text-light">${status}</span></td><td style="color:#aaa">${task}</td><td><strong style="color:white">${tid}</strong></td><td class="${resultClass}">${result}</td></tr>`;
+        }).join('');
+
+        if (newLogsHTML !== __lastLogsHTML) {
+          tbody.innerHTML = newLogsHTML;
+          __lastLogsHTML = newLogsHTML;
+          setTimeout(() => adjustVisibleCounts(), 30);
+        }
+
+        const select = document.getElementById('round-select');
+        if (Array.isArray(data.available_rounds)) {
+          let rebuild = (select.options.length !== data.available_rounds.length);
+          if (!rebuild) {
+            const opts = Array.from(select.options).map(o => o.value);
+            rebuild = opts.join(',') !== data.available_rounds.join(',');
+          }
+          if (rebuild) {
+            select.innerHTML = data.available_rounds.map(rId => {
+              const isCurrent = rId === data.current_round_id;
+              return `<option value="${rId}">Round ${rId} ${isCurrent ? '(Active)' : ''}</option>`;
+            }).join('');
+            select.value = currentViewingRound || data.current_round_id;
+          }
+        }
+
+        const displayRound = currentViewingRound || data.current_round_id;
+        document.getElementById('current-round-display').innerText = `MISSION ROUND #${displayRound}`;
+
+        const badge = document.getElementById('conn-badge');
+        // Check if we're viewing the current/live round
+        const isLive = !currentViewingRound || (currentViewingRound == data.current_round_id);
+        console.log('Badge update:', { currentViewingRound, current_round_id: data.current_round_id, isLive });
+        
+        if (isLive) { 
+          badge.classList.add('flashing'); 
+          badge.innerText = 'LIVE'; 
+          badge.style.backgroundColor = 'var(--accent)'; 
+        }
+        else { 
+          badge.classList.remove('flashing'); 
+          badge.innerText = 'ARCHIVED'; 
+          badge.style.backgroundColor = '#444'; 
+        }
+      } catch (err) { console.error('updateDashboard', err); }
+      finally { __updating = false; }
+    }
+
+    async function updateLoop() { try { await updateDashboard(); } catch (e) { console.error(e); } finally { setTimeout(updateLoop, 2000); } }
+    updateLoop();
+
+    function startNewRound() { if (!confirm('Confirm: Initialize new mission round?')) return; fetch('/api/new_round', { method: 'POST' }).then(r => r.json()).then(() => { currentViewingRound = null; }).catch(e => console.error(e)); }
+
+    // ========================================
+    // VISION CONTROL FUNCTIONS
+    // ========================================
+    async function visionCapture(mode) {
+      try {
+        const btn = event.target;
+        btn.disabled = true;
+        const originalText = btn.innerText;
+        btn.innerText = '⏳ Processing...';
+        
+        const res = await fetch('/api/vision/capture', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            x: 0.0,
+            y: 0.0,
+            mode: mode
+          })
+        });
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        
+        if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          console.log('Capture initiated:', data.message);
+          // Show toast notification
+          showVisionNotification(`✓ ${mode.toUpperCase()} capture started`);
+        }
+        
+        btn.innerText = originalText;
+        btn.disabled = false;
+      } catch (err) {
+        console.error('visionCapture error:', err);
+        alert('Capture failed: ' + err.message);
+        event.target.disabled = false;
+        event.target.innerText = '📷 ' + event.target.innerText.split(' ')[1];
+      }
+    }
+
+    async function visionLED(action, level = 'med') {
+      try {
+        const btn = event.target;
+        btn.disabled = true;
+        
+        const payload = action === 'off' 
+          ? { action: 'off', index: 0 }
+          : { action: 'on', color: action, level: level, index: 0 };
+        
+        const res = await fetch('/api/vision/led', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        
+        if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          console.log('LED command:', data.message);
+          showVisionNotification(data.message);
+        }
+        
+        btn.disabled = false;
+      } catch (err) {
+        console.error('visionLED error:', err);
+        alert('LED control failed: ' + err.message);
+        event.target.disabled = false;
+      }
+    }
+
+    async function visionServoDebug() {
+      try {
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerText = '🔧 Opening...';
+        
+        const res = await fetch('/api/vision/servo_debug', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        
+        if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          console.log('Servo debug:', data.message);
+          showVisionNotification(data.message);
+        }
+        
+        setTimeout(() => {
+          btn.innerText = '🔧 Servo Debug';
+          btn.disabled = false;
+        }, 1000);
+      } catch (err) {
+        console.error('visionServoDebug error:', err);
+        alert('Servo debug failed: ' + err.message);
+        event.target.disabled = false;
+        event.target.innerText = '🔧 Servo Debug';
+      }
+    }
+
+    async function visionWaitCompletion() {
+      try {
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerText = '⏳ Waiting...';
+        
+        const res = await fetch('/api/vision/wait_completion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quiet: false })
+        });
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        
+        if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          console.log('Processing complete:', data.message);
+          showVisionNotification('✓ All processing completed');
+        }
+        
+        btn.innerText = '⏳ Wait Completion';
+        btn.disabled = false;
+      } catch (err) {
+        console.error('visionWaitCompletion error:', err);
+        alert('Wait completion failed: ' + err.message);
+        event.target.disabled = false;
+        event.target.innerText = '⏳ Wait Completion';
+      }
+    }
+
+    function showVisionNotification(message) {
+      const notif = document.createElement('div');
+      notif.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #00ff88;
+        color: #000;
+        padding: 15px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+        z-index: 9999;
+        box-shadow: 0 4px 12px rgba(0,255,136,0.3);
+        animation: slideIn 0.3s ease-out;
+      `;
+      notif.innerText = message;
+      document.body.appendChild(notif);
+      
+      setTimeout(() => {
+        notif.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => notif.remove(), 300);
+      }, 2500);
+    }
+
+    let __lastContainerMaxHeight = null;
+    function adjustWarehouseVisibleRows() {
+      try {
+        const container = document.getElementById('warehouse-container');
+        if (!container) return;
+        const N_RACKS = 5;
+        const cs = window.getComputedStyle(container);
+        const gridColsVal = cs.getPropertyValue('grid-template-columns');
+        let columns = 1;
+        if (gridColsVal && gridColsVal.trim() && gridColsVal.trim() !== 'none') columns = gridColsVal.split(/\s+/).length;
+        const rowsRequired = Math.ceil(N_RACKS / columns);
+        const firstRack = container.querySelector('.rack-column');
+        if (!firstRack) return;
+        const rackRect = firstRack.getBoundingClientRect();
+        const rackHeight = Math.round(rackRect.height);
+        let gap = 24;
+        const gapVal = cs.getPropertyValue('row-gap') || cs.getPropertyValue('gap');
+        if (gapVal) { const m = gapVal.match(/([\d.]+)px/); if (m) gap = parseFloat(m[1]); }
+        const total = (rackHeight * rowsRequired) + (gap * Math.max(0, rowsRequired - 1));
+        const buffer = 8;
+        const final = Math.max(120, Math.min(1400, Math.round(total + buffer)));
+        if (final !== __lastContainerMaxHeight) { container.style.maxHeight = final + 'px'; container.style.overflowY = 'auto'; __lastContainerMaxHeight = final; }
+      } catch (e) { console.warn('adjustWarehouseVisibleRows error', e); }
+    }
+
+    let __lastPerRackMax = new WeakMap();
+    function adjustVisibleCounts() {
+      try {
+        const VISIBLE = 5;
+        const MAX_ALLOWED = 900;
+        const MIN_ALLOWED = 120;
+        const rackCols = document.querySelectorAll('.rack-column');
+        rackCols.forEach(col => {
+          const shelf = col.querySelector('.shelf-box');
+          if (!shelf) return;
+          const itemH = Math.round(shelf.getBoundingClientRect().height) || 60;
+          const titleEl = col.querySelector('.rack-title');
+          const titleH = titleEl ? Math.round(titleEl.getBoundingClientRect().height) : 36;
+          const extra = 12;
+          let target = (itemH * VISIBLE) + titleH + extra;
+          target = Math.max(MIN_ALLOWED, Math.min(MAX_ALLOWED, target));
+          const prev = __lastPerRackMax.get(col) || null;
+          if (prev !== target) { col.style.maxHeight = target + 'px'; col.style.overflowY = 'auto'; __lastPerRackMax.set(col, target); }
+        });
+
+        const tableWrapper = document.querySelector('.table-wrapper');
+        const tbody = document.getElementById('telemetry-body');
+        if (tableWrapper && tbody) {
+          const firstRow = tbody.querySelector('tr');
+          const thead = document.querySelector('.custom-table thead');
+          const headerH = thead ? Math.round(thead.getBoundingClientRect().height) : 40;
+          let rowH = firstRow ? Math.round(firstRow.getBoundingClientRect().height) : 32;
+          if (rowH < 16) rowH = 32;
+          let targetT = headerH + (rowH * VISIBLE) + 8;
+          targetT = Math.max(MIN_ALLOWED, Math.min(MAX_ALLOWED, targetT));
+          if (tableWrapper.style.maxHeight !== (targetT + 'px')) { tableWrapper.style.maxHeight = targetT + 'px'; tableWrapper.style.overflowY = 'auto'; }
+        }
+      } catch (e) { console.warn('adjustVisibleCounts error', e); }
+    }
+
+    function scheduleAdjustments() { clearTimeout(window.__adjTimer); window.__adjTimer = setTimeout(() => { adjustWarehouseVisibleRows(); adjustVisibleCounts(); }, 120); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scheduleAdjustments); else scheduleAdjustments();
+    window.addEventListener('resize', scheduleAdjustments);
+    // --- Round selector: allow user to pick archived rounds ---
+    const roundSelectEl = document.getElementById('round-select');
+    if (roundSelectEl) {
+      roundSelectEl.addEventListener('change', function() {
+        // empty value -> follow live (null), otherwise use selected round id
+        console.log('Round selector changed to:', this.value);
+        currentViewingRound = this.value ? String(this.value) : null;
+        console.log('currentViewingRound set to:', currentViewingRound);
+        // Reset update flag to force immediate refresh
+        __updating = false;
+        // immediately refresh to show selected round data
+        updateDashboard();
+      });
+    }
+
+    // --- Search Inventory ---
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+    let currentShelfMap = {};
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        const query = this.value.trim().toUpperCase();
+        if (!query) {
+          searchResults.style.display = 'none';
+          searchResults.innerHTML = '';
+          return;
+        }
+
+        const matches = [];
+        for (const [shelfId, status] of Object.entries(currentShelfMap)) {
+          if (status.toUpperCase().includes(query) || shelfId.toUpperCase().includes(query)) {
+            matches.push({ shelfId, status });
+          }
+        }
+
+        if (matches.length === 0) {
+          searchResults.innerHTML = '<div class="p-2 text-danger">No matches found</div>';
+        } else {
+          searchResults.innerHTML = matches.map(m => 
+            `<div class="p-2 border-bottom" style="border-color:#333; cursor:pointer; display:flex; justify-content:space-between; color:#ccc;" onmouseover="this.style.background='#252525'" onmouseout="this.style.background=''" data-search-shelf="${m.shelfId}"><span style="color:#fff; font-weight:bold;">${m.shelfId}</span><span style="color:${m.status.toLowerCase() === 'empty' ? '#ff4d4d' : '#00ff88'}; font-weight:bold;">${m.status}</span></div>`
+          ).join('');
+          // Add click handlers to results
+          document.querySelectorAll('[data-search-shelf]').forEach(el => {
+            el.addEventListener('click', function() {
+              const shelfId = this.getAttribute('data-search-shelf');
+              highlightShelf(shelfId);
+            });
+          });
+        }
+
+        searchResults.style.display = 'block';
+      });
+    }
+
+    // Store shelf map for search
+    const originalUpdateDashboard = updateDashboard;
+    async function updateDashboardWithSearch() {
+      const result = await originalUpdateDashboard.call(this);
+      // Capture the current shelf map after update
+      const stats = window.__lastStats || {};
+      currentShelfMap = stats.scanned_shelves_map || {};
+      return result;
+    }
+    updateDashboard = updateDashboardWithSearch;
+
+    // --- Highlight shelf on click or search ---
+    function highlightShelf(shelfId) {
+      // Remove previous highlights
+      document.querySelectorAll('.shelf-box.highlight-search').forEach(el => {
+        el.classList.remove('highlight-search');
+      });
+
+      // Highlight the target shelf
+      const shelf = document.querySelector(`[data-shelf-id="${shelfId}"]`);
+      if (shelf) {
+        shelf.classList.add('highlight-search');
+        shelf.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  </script>
+</body>
+</html>

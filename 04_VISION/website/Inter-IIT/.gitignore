@@ -1,0 +1,6 @@
+# Ignore CSV files
+*.csv
+.venv/
+inventory.csv
+racks.csv
+rover_data.csv

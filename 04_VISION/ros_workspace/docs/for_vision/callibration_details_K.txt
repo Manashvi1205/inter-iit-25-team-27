@@ -1,0 +1,15 @@
+### PROCESS FOR SWITCHING OFF AUTOFOCUS
+v4l2-ctl --list-devices
+    Hy-13M（8658) -Camera: Hy-13M8 (usb-3610000.usb-2.1):
+        /dev/video0
+        /dev/video1
+        /dev/media1
+
+v4l2-ctl -d /dev/video0 -l
+     focus_absolute 0x009a090a (int)    : min=1 max=1023 step=1 default=200 value=200
+     focus_automatic_continuous 0x009a090c (bool)   : default=1 value=0
+
+Focus camera at expected distance
+v4l2-ctl -d /dev/video0 --set-ctrl=focus_automatic_continuous=0
+v4l2-ctl -d /dev/video0 --set-ctrl=focus_absolute=200
+

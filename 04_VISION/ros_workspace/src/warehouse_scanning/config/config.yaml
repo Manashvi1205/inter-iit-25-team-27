@@ -1,0 +1,75 @@
+camera:
+  # K:
+  #   - [252.48483428,   0.0,         314.2399718 ]
+  #   - [  0.0,        254.07987077, 231.91962777]
+  #   - [  0.0,           0.0,           1.0       ]
+  d: 0.20
+  K: 
+      [1030.4885319130626,0.0,978.0967313387366]
+      [0.0,1051.6228159845568,644.1510349705956]
+      [0.0,0.0,1.0]
+
+  distortions_coeffs: [0.06492233876659445,-0.4896215383567641,0.02832130250788774,-0.006786061605369475,0.6569801940038539]
+
+scanner:
+  # camera_candidates: [0, 1, 2]
+  camera_candidates: [2,3,4]
+  image_width: 1920
+  image_height: 1080
+  fourcc_codec: "MJPG"
+  fps_target: 30
+  enable_servo: false
+  servo_port: "/dev/ttyUSB0"
+  servo_baud_rate: 115200
+  enable_logging: true
+  raw_save_dir: "ros_workspace/src/warehouse_scanning/logs/captures"
+  metadata_csv_path: "ros_workspace/src/warehouse_scanning/logs/captures/metadata.csv"
+  log_file_path: "ros_workspace/src/warehouse_scanning/logs/scanner.log"
+
+processor:
+  log_file: "ros_workspace/src/warehouse_scanning/logs/processor.log"
+  inventory_file: "ros_workspace/src/warehouse_scanning/output/inventory.csv"
+  raw_save_dir: "ros_workspace/src/warehouse_scanning/logs/captures"
+  annotated_save_dir: "ros_workspace/src/warehouse_scanning/logs/annotated"
+  save_annotated: true
+  raw_meta_csv: "ros_workspace/src/warehouse_scanning/logs/captures_meta.csv"
+
+duplicacy_thresholds:
+  x: 4.0
+  y: 3.0
+
+qr_detector:
+  model_size: "m"
+  conf_th: 0.5
+  nms_iou: 0.3
+  padding_value: 0.2
+  wechat_dir: "ros_workspace/src/warehouse_scanning/config/wechat_qrcode_models"
+
+pipeline:
+  num_scans: 20
+  burst_size: 10
+  capture_dir: "ros_workspace/src/warehouse_scanning/captures"
+  metadata_csv_path: "ros_workspace/src/warehouse_scanning/captures/metadata.csv"
+  error_log_path: "ros_workspace/src/warehouse_scanning/logs/capture_errors.log"
+  processor_log_path: "ros_workspace/src/warehouse_scanning/logs/processor.log"
+  inventory_csv_path: "ros_workspace/src/warehouse_scanning/output/inventory.csv"
+
+vision_node:
+  log_file: "ros_workspace/src/warehouse_scanning/logs/vision_node.log"
+  console_log_level: "INFO"
+  file_log_level: "DEBUG"
+  delete_raw_flag: false
+
+
+servo:
+  timeout: 2         
+  h_theta: 30        
+  v_theta: 25        
+  h_neutral: 84        
+  v_neutral: 80        
+  wait_after_move: 0.25
+
+servo_ids:
+  horizontal: 0
+  vertical: 1
+

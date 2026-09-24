@@ -1,0 +1,29 @@
+Part_ID,Part_Name,Manufacturer,Item Label,Qty.,Price per piece,Total Price,Estimated Time of Delivery,Datasheet/ Specifications/ Supporting docs
+SKU: 3405,Cytron MDD10A,Macfos LTD,Cytron MDD10A Dual Channel Enhanced 10Amp DC Motor Driver 30A Peak,2,"₹1,992.00","₹3,984.00",2-3 Days,Datasheet
+SKU: 815794,Buck Converters,Macfos LTD,200W 20A DC-DC Buck Converter Step Down Module Constant Current LED Driver Module,2,₹369.00,₹738.00,2-3 Days,Specifications
+SKU: 9175,Wheel hub (10mm),Macfos LTD,EasyMech ID-10mm Motor Coupling Hub,2,₹531.00,"₹1,062.00",2-3 Days,Schematic
+SKU: R110597,Shaft coupling,Macfos LTD,EasyMech 8×10 Aluminium Rigid coupling,2,₹336.00,₹672.00,2-3 Days,Datasheet
+SKU: 559684,3D Printer Filament,Macfos LTD,eSUN PLA+ 1.75mm 3D Printing Filament 1kg,1,"₹1,270.00","₹1,270.00",2-3 Days,User Manual
+SKU: R255021,Emergency button,Macfos LTD,ONPOW6319-01TS/J/G/24V/PA+S10-1950,2,₹635.00,"₹1,270.00",1-2 Days,Datasheet
+SKU: 1320700,Emergency LED ,Macfos LTD,12-18V 5MM Water Clear RGB Slow Flash LED Metal Indicator Light with 20CM,1,₹134.00,₹134.00,1-2 Days,Specifications
+SKU: R196225,Emergency Buzzer,Macfos LTD,SmartElex Active Buzzer Module,1,₹40.00,₹40.00,2-3 Days,Specifications
+-,BNO0055,Adafruit,BNO055 9-DOF Absolute Orientation Sensor,1,"₹1,349.99","₹1,349.99",2-3 Days,Datasheet
+-,Camera,Waveshare ,IMX258 13MP OIS USB Camera with Optical Image Stabilization,1,"₹9,499.00","₹9,499.00",8-10 Days,Specifications
+-,SSD 500GB,Zebronics ,WD Green SN350 / Zebronics MN26 NVMe SSD,1,"₹5,199.99","₹5,199.99",2-3 Days,Specifications
+SKU: 28496,6x8 coupler,Balaji Engineering Works,Precision Flexible Shaft Couplers,2,₹149.00,₹298.00,2-3 Days,Specifications
+-,100Ah Battery,LRSA Technology,12V 100ah LifePo4 battery Rechargeable Battery 12v 100000mah battery- LRSA TECHNOLOGY PVT. LTD,1,"₹16,999.00","₹16,999.00",2-3 Days,Description
+SKU: R199100,Jetson Orin Nano,Macfos LTD,NVIDIA Jetson Orin Nano Super Developer Kit ,1,"₹ 33,999.00","₹ 33,999.00",8-10 Days,Specification
+,Mega Arduino 2560,,,3,₹149.00,₹149.00,2-3 Days,
+SKU: 1507765,LiDAR,Macfos LTD,"RPLiDAR S2E 360 Degree Laser Range Scanner – 30M Range, 2D point cloud map, 80000 lux light resistance, IP65, high safety for human eye  Model: S2M1-R2E",1,"₹29,999.00","₹29,999.00",8-10 Days,Datasheet
+SKU: 1219081,Servo Motor SC15,Macfos LTD,Waveshare SC15 17kg Large Torque Programmable Serial Bus Servo,2,"₹1,669.00","₹3,338.00",2-3 Days,Specification
+SKU: R254743,ESP Controller,Espressif Systems,ESP32-S3-MOD-8M Module,1,₹413.00,₹413.00,2-3 Days,Datasheet
+-,Battery 12.8V,LRSA Technology,100Ah Customized,1,"₹17,000.00","₹17,000.00",1 week,Customized
+SKU: 24494,IG42 Motors,Macfos LTD,Planetary DC Geared Motor 1400 RPM 22N-CM 12V IG42E-04K,2,"₹8,172.00","₹16,344.00",2-3 Days,Specification
+SKU: 649521,IG45 Motor,Macfos LTD,Planetary DC Geared Motor 438 RPM 78N-CM 24V IG45-14K,1,"₹4,628.00","₹4,628.00",2-3 Days,Specification
+SKU: 959868,Wheels (100mm dia),Macfos LTD,100mm Wheels with Plastic Rim – 2 Pcs,2,"₹1,250.00","₹2,500.00",2-3 Days,Specification
+SKU: 501343,"Chrome Plated rod (10mm D, 500mm)",Macfos LTD,500 MM long Chrome Plated Smooth Rod Diameter 10 MM,1,₹389.00,₹389.00,2-3 Days,Specification
+SKU: 501201,"Chrome Plated rod (8mm D, 400mm)",Macfos LTD,400 MM long Chrome Plated Smooth Rod Diameter 8 MM,1,₹195.00,₹195.00,2-3 Days,Specification
+,"Miscellanous(Fasteners,Standoffs,Bolts,Washers etc)",,,1,"₹5,000.00","₹5,000.00",2-3 Days,
+SKU: 52350,KP08 ,Macfos LTD,KP08 8mm Bore Inner Ball Mounted Pillow Block Insert Bearing,8,₹69.00,₹552.00,2-3 Days,Specification
+SKU: 52357,KP000 ,Macfos LTD,KP000 10mm Bore Inner Ball Mounted Pillow Block Insert Bearing,2,₹98.00,₹196.00,2-3 Days,Specification
+,Total,,,,,"₹123,218.98",,

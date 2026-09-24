@@ -1,0 +1,6 @@
+session_id: S001
+server_url: "http://127.0.0.1:8000/api/update"
+
+vision_node:
+  host: "127.0.0.1"
+  port: 9090

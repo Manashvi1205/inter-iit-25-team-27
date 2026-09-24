@@ -1,0 +1,8 @@
+Init: Input del_theta/phi || Output M
+Hardware = Input Image, Ori_n, X0, Z0
+First Layer: Yolo V8: Inputs raw image || outputs array[ qr_candidate, (corner_coordinates) ]
+Second Layer: Img_Homography: Inputs qr_candidate, corner || Outputs straight qr, centroid
+Third Layer: Preprocessing of each image
+Fourth Layer: Reading QR, output data
+
+

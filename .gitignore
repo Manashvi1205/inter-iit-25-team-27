@@ -1,0 +1,42 @@
+# Nested git metadata (this is one repo; clones must not become submodules)
+**/.git/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ROS 2 / colcon
+build/
+install/
+log/
+*.pyc
+
+# macOS junk from zip extracts
+.DS_Store
+.AppleDouble
+.LSOverride
+__MACOSX/
+._*
+
+# Editors / OS
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Runtime logs (keep source; drop noisy local logs)
+*.log
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secret.json

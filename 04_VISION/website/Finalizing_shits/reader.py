@@ -1,0 +1,2 @@
+def read(img):
+    pass
